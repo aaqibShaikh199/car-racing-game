@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An animated Formula 1 car built with HTML, CSS and JavaScript.">
+  <title>F1 Racing Car</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page">
+
+    <!-- ===================== HEADER + TELEMETRY ===================== -->
+    <header class="topbar">
+      <div>
+        <h1 class="title">F1 Racing Car</h1>
+        <p class="subtitle">Start the race, then hold Accelerate to push the car up to 340 km/h.</p>
+      </div>
+
+      <div class="dash" aria-label="Car telemetry">
+        <div class="gauge gauge-speed">
+          <span class="gauge-value" id="speedValue">0</span>
+          <span class="gauge-label">km/h</span>
+        </div>
+        <div class="gauge">
+          <span class="gauge-value" id="gearValue">N</span>
+          <span class="gauge-label">Gear</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ===================== RACE SCENE =====================
+         Background layers are listed back-to-front. Each layer
+         scrolls at a different speed (parallax) using the CSS
+         variable --offset that script.js updates every frame. -->
+    <main class="scene" id="scene" aria-label="Race track with an F1 car">
+      <div class="layer hills"></div>
+      <div class="layer grandstand"></div>
+      <div class="layer barrier"></div>
+
+      <div class="track">
+        <div class="verge"></div>
+        <div class="kerb"></div>
+        <div class="asphalt"></div>
+        <div class="kerb"></div>
+        <div class="verge"></div>
+      </div>
+
+      <div class="speed-lines" aria-hidden="true"></div>
+
+      <!-- Start lights gantry: five red lights, like a real F1 start -->
+      <div class="start-lights" aria-hidden="true">
+        <span class="light"></span>
+        <span class="light"></span>
+        <span class="light"></span>
+        <span class="light"></span>
+        <span class="light"></span>
+      </div>
+
+      <!-- ===================== THE F1 CAR =====================
+           Side view, nose pointing right. Every part is a <div>
+           positioned with "em" units inside .car, so the whole car
+           scales by changing one font-size in style.css. -->
+      <div class="car-wrap" id="carWrap">
+        <div class="car is-arriving" id="car">
+          <div class="car-shadow"></div>
+
+          <!-- Chassis: everything mounted on the suspension.
+               It bounces and pitches, while the wheels stay on the road. -->
+          <div class="chassis">
+            <div class="part rear-wing-pylon"></div>
+            <div class="part diffuser"></div>
+            <div class="part floor"></div>
+            <div class="part engine-cover"></div>
+            <div class="part airbox"></div>
+            <div class="part sidepod"></div>
+            <div class="part livery-stripe"></div>
+            <div class="part car-number">7</div>
+            <div class="part nose"></div>
+            <div class="part nose-pillar"></div>
+            <div class="part helmet"></div>
+            <div class="part cockpit-rim"></div>
+            <div class="part halo"></div>
+            <div class="part mirror"></div>
+            <div class="part front-wing-main"></div>
+            <div class="part front-wing-flap"></div>
+            <div class="part front-wing-endplate"></div>
+            <div class="part rear-wing-endplate"></div>
+            <div class="part rear-wing-main"></div>
+            <div class="part rear-wing-flap"></div>
+            <div class="part rain-light"></div>
+          </div>
+
+          <!-- Wheels: tyre, coloured sidewall band, spoked rim, hub -->
+          <div class="wheel wheel-rear">
+            <div class="tyre-band"></div>
+            <div class="rim"></div>
+            <div class="hub"></div>
+          </div>
+          <div class="wheel wheel-front">
+            <div class="tyre-band"></div>
+            <div class="rim"></div>
+            <div class="hub"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ===================== CONTROLS ===================== -->
+    <section class="controls" aria-label="Car controls">
+      <button class="btn btn-start" id="startBtn" type="button">Start race</button>
+      <button class="btn btn-hold btn-gas" id="gasBtn" type="button">Accelerate</button>
+      <button class="btn btn-hold btn-brake" id="brakeBtn" type="button">Brake</button>
+
+      <!-- Optional live preview of the livery. The permanent colour
+           lives in style.css (--car-color). -->
+      <div class="livery">
+        <label for="liveryPicker">Car color</label>
+        <input type="color" id="liveryPicker" value="#ff0000">
+        <button class="btn btn-quiet" id="resetColorBtn" type="button">Reset</button>
+      </div>
+    </section>
+
+    <p class="status" id="status" role="status">Press Start race to begin.</p>
+    <p class="hint">Keyboard: ↑ or W to accelerate, ↓ or S to brake.</p>
+  </div>
+
+  <script src="script.js" defer></script>
+</body>
+</html>

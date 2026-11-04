@@ -1,0 +1,840 @@
+/* =================================================================
+   F1 Racing Car – style.css
+   ================================================================= */
+
+/* -----------------------------------------------------------------
+   1. THE CAR COLOR
+   Registering --car-color with @property tells the browser it is a
+   real <color>. That lets the color animate smoothly when it changes.
+   ----------------------------------------------------------------- */
+@property --car-color {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #130101;
+}
+
+:root {
+  /* >>> Change this one value to repaint the whole car. <<<
+     Examples: #0000ff (blue), #00a19c (teal), #ff8000 (papaya) */
+  --car-color: #000000;
+
+  /* Other livery details */
+  --accent-color: #ffffff;   /* stripe + race number */
+  --tyre-color: #ffd12a;     /* tyre sidewall band (yellow = medium) */
+  --helmet-color: #f4f4f4;
+
+  /* Page colors */
+  --ink: #1d2330;
+  --muted: #5b6475;
+  --paper: #eef1f5;
+  --panel: #ffffff;
+  --line: #d6dce5;
+  --carbon: #1f2124;
+  --carbon-light: #34373d;
+
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+
+  /* Smoothly fade between colors when --car-color changes */
+  transition: --car-color 0.6s ease;
+}
+
+/* -----------------------------------------------------------------
+   2. PAGE LAYOUT
+   ----------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  color: var(--ink);
+  background: var(--paper);
+  line-height: 1.5;
+}
+
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(12px, 3vw, 32px);
+  display: grid;
+  gap: clamp(12px, 2vw, 20px);
+}
+
+.topbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px 24px;
+}
+
+.title {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 3.6rem);
+  font-weight: 900;
+  font-style: italic;            /* leaning type suggests speed */
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.subtitle {
+  margin: 0.5rem 0 0;
+  color: var(--muted);
+  max-width: 60ch;
+}
+
+/* Telemetry gauges */
+.dash {
+  display: flex;
+  gap: 10px;
+}
+
+.gauge {
+  min-width: 96px;
+  padding: 8px 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+/* The speed gauge borrows the car color, so the UI follows the livery */
+.gauge-speed {
+  border-left: 5px solid var(--car-color);
+}
+
+.gauge-value {
+  display: block;
+  font-size: clamp(1.5rem, 4vw, 2.2rem);
+  font-weight: 800;
+  font-style: italic;
+  font-variant-numeric: tabular-nums; /* digits don't jump around */
+  line-height: 1.1;
+}
+
+.gauge-label {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+/* -----------------------------------------------------------------
+   3. THE RACE SCENE
+   --offset (in px) is set by script.js. Each layer multiplies it by
+   a different factor: far layers move slowly, near layers move fast.
+   ----------------------------------------------------------------- */
+.scene {
+  --offset: 0px;
+  --speed-ratio: 0;   /* 0 = stopped, 1 = top speed */
+
+  position: relative;
+  height: clamp(260px, min(58vh, 70vw), 540px);
+  overflow: hidden;
+  border-radius: 14px;
+  background: linear-gradient(#86bfe4, #d6ebf6 55%);
+  isolation: isolate;
+}
+
+.layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  background-repeat: repeat-x;
+}
+
+/* Rolling hills far away (slowest) */
+.hills {
+  bottom: 44%;
+  height: 22%;
+  background-image:
+    radial-gradient(ellipse 50% 100% at 50% 100%, #86ad70 98%, transparent 100%),
+    radial-gradient(ellipse 50% 100% at 50% 100%, #9cbd86 98%, transparent 100%);
+  background-size: 460px 100%, 300px 70%;
+  background-position-y: bottom;
+  background-position-x: calc(var(--offset) * -0.06), calc(var(--offset) * -0.04 + 150px);
+}
+
+/* Grandstand with spectators (dots of color) */
+.grandstand {
+  bottom: 40%;
+  height: 12%;
+  border-top: 6px solid #6d7480;
+  background-image:
+    radial-gradient(circle at 3px 3px, #e8574f 2px, transparent 2.6px),
+    radial-gradient(circle at 9px 5px, #3a6fd8 2px, transparent 2.6px),
+    radial-gradient(circle at 14px 2px, #f2c230 2px, transparent 2.6px),
+    repeating-linear-gradient(to bottom, #c0c6cf 0 4px, #a6adb8 4px 8px);
+  background-size: 17px 8px, 17px 8px, 17px 8px, 100% 100%;
+  background-position-x: calc(var(--offset) * -0.25);
+}
+
+/* Trackside advertising barrier */
+.barrier {
+  bottom: 36%;
+  height: 4.5%;
+  background-image: repeating-linear-gradient(90deg, #f4f4f4 0 70px, #2c66ad 70px 140px);
+  background-position-x: calc(var(--offset) * -0.7);
+}
+
+/* The track itself: grass, kerb, tarmac, kerb, grass */
+.track {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 36%;
+  display: flex;
+  flex-direction: column;
+}
+
+.track > div {
+  background-position-x: calc(var(--offset) * -1); /* moves with the car */
+}
+
+.verge {
+  flex: 0 0 12%;
+  background-image: repeating-linear-gradient(90deg, #5f9447 0 60px, #578a41 60px 120px);
+}
+
+.kerb {
+  flex: 0 0 9%;
+  background-image: repeating-linear-gradient(90deg, #d7262b 0 40px, #f4f4f4 40px 80px);
+}
+
+.asphalt {
+  flex: 1;
+  background-color: #45484e;
+  background-image:
+    linear-gradient(90deg, #f2f2f2 0 50%, transparent 50%),        /* dashed centre line */
+    linear-gradient(to bottom, #4b4e55, #3f4247 60%, #464950);     /* subtle shading */
+  background-size: 140px 4px, 100% 100%;
+  background-position-y: 40%, 0;
+  background-repeat: repeat-x, no-repeat;
+}
+
+/* White streaks that appear at high speed */
+.speed-lines {
+  position: absolute;
+  inset: 0 0 32% 0;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  background-image:
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.75), transparent),
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent),
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent),
+    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+  background-size: 260px 2px, 180px 2px, 320px 2px, 220px 2px;
+  background-repeat: repeat-x;
+  background-position-y: 22%, 40%, 62%, 80%;
+  background-position-x: calc(var(--offset) * -2.4);
+}
+
+.scene.is-fast .speed-lines {
+  opacity: 0.85;
+}
+
+/* Start lights gantry */
+.start-lights {
+  position: absolute;
+  top: 6%;
+  left: 50%;
+  translate: -50% 0;
+  z-index: 6;
+  display: flex;
+  gap: clamp(6px, 1.2vw, 12px);
+  padding: clamp(6px, 1vw, 10px) clamp(10px, 1.6vw, 16px);
+  background: var(--carbon);
+  border-radius: 8px;
+}
+
+.light {
+  width: clamp(16px, 3vw, 28px);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #3a3d42;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.6);
+  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.light.on {
+  background: #ff2a1a;
+  box-shadow: 0 0 14px 3px rgba(255, 42, 26, 0.75);
+}
+
+/* -----------------------------------------------------------------
+   4. THE F1 CAR
+   All sizes are in "em". Changing .car's font-size scales the whole
+   car, which is how it stays responsive on phones and desktops.
+   ----------------------------------------------------------------- */
+.car-wrap {
+  position: absolute;
+  left: 50%;
+  bottom: 10%;
+  z-index: 5;
+  /* Centre the car, then slide it forward as speed increases */
+  translate: calc(-50% - 6vw + var(--speed-ratio) * 14vw) 0;
+  /* One-off entrance: the car drives in when the page loads */
+  animation: drive-in 1.6s cubic-bezier(0.16, 0.84, 0.3, 1) both;
+}
+
+.car {
+  /* Shades calculated from --car-color. Because they are defined
+     here, they update automatically whenever --car-color changes. */
+  --car-dark: color-mix(in srgb, var(--car-color) 65%, #000);
+  --car-deep: color-mix(in srgb, var(--car-color) 45%, #000);
+  --car-light: color-mix(in srgb, var(--car-color) 70%, #fff);
+  --wheel-angle: 0deg; /* set by script.js */
+
+  position: relative;
+  width: 40em;
+  height: 9.6em;
+  font-size: clamp(6px, 1.9vw, 14px);
+}
+
+/* Every car part is placed with left/bottom coordinates (in em) */
+.part {
+  position: absolute;
+}
+
+.car-shadow {
+  position: absolute;
+  left: 2em;
+  right: 0.5em;
+  bottom: -0.6em;
+  height: 1.4em;
+  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.45), transparent 70%);
+}
+
+/* The chassis holds the bodywork. It uses the individual "translate"
+   and "rotate" properties so the bounce animation (translate) and the
+   braking pitch (rotate) can run at the same time without clashing. */
+.chassis {
+  position: absolute;
+  inset: 0;
+  transform-origin: 55% 100%;
+  transition: rotate 0.35s ease;
+}
+
+/* --- Rear end --- */
+.rear-wing-pylon {
+  left: 3.4em;
+  bottom: 3.2em;
+  width: 0.7em;
+  height: 4.4em;
+  background: var(--carbon);
+}
+
+.diffuser {
+  left: 1.8em;
+  bottom: 1.3em;
+  width: 5em;
+  height: 1.8em;
+  background: var(--carbon);
+  clip-path: polygon(0 0, 100% 55%, 100% 100%, 20% 100%);
+}
+
+.floor {
+  left: 5em;
+  bottom: 1.25em;
+  width: 28.5em;
+  height: 0.6em;
+  background: var(--carbon);
+  border-radius: 0.3em;
+}
+
+/* --- Main bodywork (uses the car color) --- */
+.engine-cover {
+  left: 5.5em;
+  bottom: 1.8em;
+  width: 17em;
+  height: 5.6em;
+  background: linear-gradient(to bottom, var(--car-light), var(--car-color) 35%, var(--car-dark));
+  clip-path: polygon(0% 62%, 35% 30%, 62% 0%, 80% 0%, 100% 40%, 100% 100%, 0% 100%);
+}
+
+.airbox {
+  left: 18.5em;
+  bottom: 6.4em;
+  width: 1.2em;
+  height: 0.9em;
+  background: #111;
+  border-radius: 0.45em;
+}
+
+.sidepod {
+  left: 9em;
+  bottom: 1.8em;
+  width: 13em;
+  height: 2.7em;
+  background: linear-gradient(to bottom, var(--car-color), var(--car-deep));
+  border-radius: 1.4em 2em 0.3em 0.3em;
+}
+
+/* Sidepod air intake */
+.sidepod::before {
+  content: "";
+  position: absolute;
+  right: 0.4em;
+  top: 0.35em;
+  width: 1.1em;
+  height: 1.3em;
+  background: #111;
+  border-radius: 0.5em 0.2em 0.2em 0.5em;
+}
+
+.livery-stripe {
+  left: 9.6em;
+  bottom: 2.4em;
+  width: 13em;
+  height: 0.3em;
+  background: var(--accent-color);
+  transform: skewX(-20deg);
+  opacity: 0.9;
+}
+
+/* Text sizes change what 1em means, so the position values below
+   are the car coordinates divided by this font-size (1.5). */
+.car-number {
+  font-size: 1.5em;
+  left: 10.7em;   /* ≈ 16em of car width  */
+  bottom: 1.9em;  /* ≈ 2.85em of car height */
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1;
+  color: var(--accent-color);
+  text-shadow: 0 0.05em 0.1em rgba(0, 0, 0, 0.4);
+}
+
+.nose {
+  left: 22em;
+  bottom: 2em;
+  width: 16.5em;
+  height: 2.8em;
+  background: linear-gradient(to bottom, var(--car-light), var(--car-color) 35%, var(--car-dark));
+  clip-path: polygon(0 0, 30% 14%, 100% 62%, 100% 100%, 0 100%);
+}
+
+.nose-pillar {
+  left: 35.4em;
+  bottom: 1.1em;
+  width: 0.5em;
+  height: 1.1em;
+  background: var(--carbon);
+}
+
+/* --- Cockpit --- */
+.helmet {
+  left: 19.6em;
+  bottom: 5em;
+  width: 2.2em;
+  height: 2.1em;
+  border-radius: 50% 55% 45% 45%;
+  background: radial-gradient(circle at 35% 30%, #fff, var(--helmet-color) 45%, #c9ccd1);
+  overflow: hidden;
+}
+
+/* Helmet stripe in the team color */
+.helmet::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0.15em;
+  height: 0.35em;
+  background: var(--car-color);
+}
+
+/* Dark visor */
+.helmet::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0.65em;
+  width: 1.2em;
+  height: 0.55em;
+  background: linear-gradient(90deg, #1b1d22, #3a4a63);
+  border-radius: 0.3em 0 0 0.3em;
+}
+
+.cockpit-rim {
+  left: 19em;
+  bottom: 4.3em;
+  width: 5.2em;
+  height: 1.1em;
+  background: var(--car-color);
+  border-radius: 0.6em 0.6em 0 0;
+}
+
+/* The halo: a safety hoop drawn with two borders and a rounded corner */
+.halo {
+  left: 18.4em;
+  bottom: 5.4em;
+  width: 5.4em;
+  height: 1.9em;
+  border-top: 0.4em solid var(--carbon);
+  border-right: 0.4em solid var(--carbon);
+  border-top-right-radius: 1.4em;
+}
+
+.mirror {
+  left: 24.1em;
+  bottom: 5.2em;
+  width: 1.1em;
+  height: 0.5em;
+  background: var(--car-dark);
+  border-radius: 0.25em;
+}
+
+/* --- Front wing --- */
+.front-wing-main {
+  left: 32.4em;
+  bottom: 0.75em;
+  width: 7.4em;
+  height: 0.45em;
+  background: var(--car-color);
+  border-radius: 0.25em 0.4em 0.4em 0.25em;
+}
+
+.front-wing-flap {
+  left: 33em;
+  bottom: 1.25em;
+  width: 6.4em;
+  height: 0.35em;
+  background: var(--carbon);
+  border-radius: 0.2em;
+  rotate: -7deg;
+}
+
+.front-wing-endplate {
+  left: 38.9em;
+  bottom: 0.55em;
+  width: 0.7em;
+  height: 2.2em;
+  background: var(--carbon);
+  border-radius: 0.3em 0.6em 0.2em 0.2em;
+}
+
+/* --- Rear wing --- */
+.rear-wing-endplate {
+  left: 0.6em;
+  bottom: 3.2em;
+  width: 1.2em;
+  height: 6.1em;
+  background: linear-gradient(to right, var(--car-dark), var(--car-deep));
+  border-radius: 0.3em;
+}
+
+.rear-wing-main {
+  left: 0.2em;
+  bottom: 7.4em;
+  width: 6.4em;
+  height: 1em;
+  background: linear-gradient(to bottom, var(--car-light), var(--car-color));
+  border-radius: 0.5em 0.2em 0.2em 0.5em;
+}
+
+/* DRS flap: opens (tilts up) at top speed */
+.rear-wing-flap {
+  left: 0.5em;
+  bottom: 8.55em;
+  width: 5.6em;
+  height: 0.6em;
+  background: var(--carbon-light);
+  border-radius: 0.3em;
+  transform-origin: 0% 50%;
+  transition: rotate 0.25s ease;
+}
+
+.car.drs-open .rear-wing-flap {
+  rotate: -14deg;
+}
+
+/* Red rain light: flashes while braking */
+.rain-light {
+  left: 0.9em;
+  bottom: 4em;
+  width: 0.6em;
+  height: 0.5em;
+  background: #5a1210;
+  border-radius: 0.15em;
+}
+
+.car.is-braking .rain-light {
+  animation: flash 0.25s steps(1) infinite;
+}
+
+/* -----------------------------------------------------------------
+   5. WHEELS
+   The rim and tyre band rotate by --wheel-angle, which script.js
+   calculates from the distance travelled (so they never "skid").
+   ----------------------------------------------------------------- */
+.wheel {
+  position: absolute;
+  bottom: 0;
+  width: 7.4em;
+  height: 7.4em;
+  border-radius: 50%;
+  background: radial-gradient(circle, #2a2c30 0 58%, #141517 59% 100%);
+  box-shadow:
+    inset 0 0.25em 0.4em rgba(255, 255, 255, 0.08),
+    inset 0 -0.3em 0.5em rgba(0, 0, 0, 0.6);
+}
+
+.wheel-rear {
+  left: 3.2em;
+}
+
+.wheel-front {
+  left: 28em;
+}
+
+/* Colored sidewall band with gaps, so you can see it turning */
+.tyre-band {
+  position: absolute;
+  inset: 1.05em;
+  border-radius: 50%;
+  background: repeating-conic-gradient(var(--tyre-color) 0deg 72deg, transparent 72deg 90deg);
+  /* Mask turns the filled circle into a thin ring */
+  -webkit-mask: radial-gradient(circle, transparent 0 calc(50% - 0.26em), #000 calc(50% - 0.25em));
+  mask: radial-gradient(circle, transparent 0 calc(50% - 0.26em), #000 calc(50% - 0.25em));
+  rotate: var(--wheel-angle);
+}
+
+/* Spoked rim drawn with a repeating conic gradient */
+.rim {
+  position: absolute;
+  inset: 1.55em;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, transparent 0 22%, #6f747c 23% 27%, transparent 28%),
+    repeating-conic-gradient(#b8bec6 0deg 9deg, #33363b 9deg 36deg);
+  box-shadow: inset 0 0 0 0.25em #4a4e55;
+  rotate: var(--wheel-angle);
+}
+
+.hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1.3em;
+  height: 1.3em;
+  translate: -50% -50%;
+  border-radius: 50%;
+  background: var(--car-color);
+  box-shadow: 0 0 0 0.25em var(--carbon);
+}
+
+/* Motion blur on the wheels at high speed */
+.scene.is-fast .rim,
+.scene.is-fast .tyre-band {
+  filter: blur(0.6px);
+}
+
+/* -----------------------------------------------------------------
+   6. CAR STATES (classes toggled by script.js)
+   ----------------------------------------------------------------- */
+/* Engine vibration while moving */
+.car.is-moving .chassis,
+.car.is-arriving .chassis {
+  animation: rumble 0.16s linear infinite;
+}
+
+/* Squat under acceleration: nose lifts slightly */
+.car.is-accelerating .chassis {
+  rotate: -0.5deg;
+}
+
+/* Dive under braking: nose drops */
+.car.is-braking .chassis {
+  rotate: 0.8deg;
+}
+
+/* During the entrance, the wheels spin with a plain CSS animation */
+.car.is-arriving .rim,
+.car.is-arriving .tyre-band {
+  animation: spin 0.3s linear infinite;
+}
+
+/* -----------------------------------------------------------------
+   7. KEYFRAME ANIMATIONS
+   ----------------------------------------------------------------- */
+@keyframes drive-in {
+  from {
+    transform: translateX(-110vw);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes rumble {
+  0%,
+  100% {
+    translate: 0 0;
+  }
+  50% {
+    translate: 0 -0.07em;
+  }
+}
+
+@keyframes spin {
+  to {
+    rotate: 360deg;
+  }
+}
+
+@keyframes flash {
+  0% {
+    background: #ff2a1a;
+    box-shadow: 0 0 0.8em 0.2em rgba(255, 42, 26, 0.8);
+  }
+  50% {
+    background: #5a1210;
+    box-shadow: none;
+  }
+}
+
+/* -----------------------------------------------------------------
+   8. CONTROLS
+   ----------------------------------------------------------------- */
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn {
+  min-height: 48px;          /* comfortable touch target */
+  padding: 0.8em 1.4em;
+  font: inherit;
+  font-weight: 700;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.12s ease, filter 0.2s ease;
+}
+
+.btn:hover {
+  filter: brightness(1.08);
+}
+
+.btn:focus-visible {
+  outline: 3px solid #2b6cd6;
+  outline-offset: 2px;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.btn-start {
+  background: var(--ink);
+  color: #fff;
+}
+
+.btn-gas {
+  background: #1f9d55;
+  color: #fff;
+}
+
+.btn-brake {
+  background: #d9480f;
+  color: #fff;
+}
+
+/* Hold-to-use buttons: stop the page scrolling or showing a
+   long-press menu while a finger is on them */
+.btn-hold {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+.btn.is-held {
+  transform: scale(0.96);
+  filter: brightness(0.92);
+}
+
+.btn-quiet {
+  min-height: 40px;
+  padding: 0.5em 0.9em;
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--line);
+}
+
+.livery {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.livery label {
+  color: var(--muted);
+}
+
+.livery input[type="color"] {
+  width: 48px;
+  height: 40px;
+  padding: 2px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.status {
+  margin: 0;
+  font-weight: 600;
+}
+
+.hint {
+  margin: -8px 0 0;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+/* -----------------------------------------------------------------
+   9. RESPONSIVE + ACCESSIBILITY
+   ----------------------------------------------------------------- */
+@media (max-width: 600px) {
+  .controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .btn-start,
+  .livery {
+    grid-column: 1 / -1;
+  }
+
+  .livery {
+    margin-left: 0;
+  }
+}
+
+/* Respect users who ask their device for less motion */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    transition: none;
+  }
+
+  .car-wrap,
+  .car.is-moving .chassis,
+  .car.is-arriving .chassis,
+  .car.is-arriving .rim,
+  .car.is-arriving .tyre-band {
+    animation: none;
+  }
+
+  .speed-lines {
+    display: none;
+  }
+}
