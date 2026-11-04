@@ -36,7 +36,7 @@ spec:
           # For a local cluster, load this image into it first (see README).
           # For a real cluster, use your registry path, e.g.
           # docker.io/<your-user>/f1-racing-car:1.0.0
-          image: f1-racing-car:1.0.0
+          image: aaqibshaikh199/argocd:car-racing-game
           imagePullPolicy: IfNotPresent
           ports:
             - name: http
