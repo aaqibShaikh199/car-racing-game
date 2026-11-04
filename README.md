@@ -20,36 +20,19 @@ Under power, at 200 km/h in 4th gear:
 
 ## Deploy to Kubernetes
 
-You need Docker, `kubectl`, and a cluster (Docker Desktop, minikube, or kind).
+You need `kubectl` and a cluster that can pull from Docker Hub.
 
-The manifests already name the image `f1-racing-car:1.0.0`. `deployment.yaml` starts **2 pods**. `service.yaml` exposes them on **NodePort 30080**.
+Everything is in `kubernetes.yaml`: a Deployment and a Service. It runs **2 pods** of `aaqibshaikh199/argocd:car-racing-game`. The Service is a **NodePort on 30080**, which forwards to port 8080 in the container.
 
-### 1. Build the image
-
-From this folder:
+### 1. Apply the manifest
 
 ```bash
-docker build -t f1-racing-car:1.0.0 .
+kubectl apply -f kubernetes.yaml
 ```
 
-### 2. Give that image to the cluster
+That creates both the Deployment and the Service. Kubernetes pulls the image if the node does not already have it.
 
-| Cluster | What to run |
-|---|---|
-| Docker Desktop | Nothing. It already shares images with Docker. |
-| minikube | `minikube image load f1-racing-car:1.0.0` |
-| kind | `kind load docker-image f1-racing-car:1.0.0` |
-
-On a remote cluster, tag the image with your registry, push it, and set that name on the `image:` line in `deployment.yaml`.
-
-### 3. Apply the manifests
-
-```bash
-kubectl apply -f deployment.yaml
-kubectl apply -f service.yaml
-```
-
-### 4. Open the app
+### 2. Open the app
 
 | Cluster | How to open it |
 |---|---|
@@ -57,7 +40,7 @@ kubectl apply -f service.yaml
 | minikube | `minikube service f1-racing-car --url` |
 | Any cluster | `kubectl port-forward service/f1-racing-car 8080:80`, then http://localhost:8080 |
 
-### 5. Check that it is running
+### 3. Check that it is running
 
 ```bash
 kubectl get pods -l app=f1-racing-car
@@ -69,5 +52,5 @@ Both pods should show `Running` and `READY 1/1`.
 ### Remove it
 
 ```bash
-kubectl delete -f service.yaml -f deployment.yaml
+kubectl delete -f kubernetes.yaml
 ```
